@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+  name="viewport"
+  content="
+    width=device-width,
+    initial-scale=1,
+    maximum-scale=1
+  "
+>
+
+<title>
+Control de Acceso - Boda
+</title>
+
+
+<script
+  src="
+  https://unpkg.com/html5-qrcode
+  "
+></script>
+
+
+<style>
+
+body {
+
+  margin: 0;
+
+  padding: 20px;
+
+  background: #111;
+
+  color: white;
+
+  font-family:
+    Arial,
+    sans-serif;
+
+  text-align: center;
+
+}
+
+
+.contenedor {
+
+  max-width: 500px;
+
+  margin: auto;
+
+}
+
+
+#reader {
+
+  width: 100%;
+
+  margin-top: 25px;
+
+  border-radius: 20px;
+
+  overflow: hidden;
+
+}
+
+
+button {
+
+  width: 100%;
+
+  padding: 17px;
+
+  margin-top: 20px;
+
+  font-size: 18px;
+
+  border: none;
+
+  border-radius: 12px;
+
+}
+
+
+.iniciar {
+
+  background: #2e7d4f;
+
+  color: white;
+
+}
+
+
+#mensaje {
+
+  margin-top: 20px;
+
+  font-size: 18px;
+
+}
+
+
+.codigo {
+
+  background: #222;
+
+  padding: 10px;
+
+  border-radius: 10px;
+
+  margin-top: 15px;
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="contenedor">
+
+
+<h1>
+
+💍 Control de Acceso
+
+</h1>
+
+
+<p>
+
+Escanea el QR de la invitación
+
+</p>
+
+
+<button
+  id="boton"
+  class="iniciar"
+  onclick="iniciarCamara()"
+>
+
+📷 ABRIR CÁMARA
+
+</button>
+
+
+<div id="reader"></div>
+
+
+<div id="mensaje"></div>
+
+
+</div>
+
+
+
+<script>
+
+
+/*
+================================
+
+IMPORTANTE
+
+PEGA AQUÍ TU URL DE APPS SCRIPT
+
+SIN parámetros
+
+Ejemplo:
+
+https://script.google.com/macros/s/ABC123/exec
+
+================================
+*/
+
+
+const APPS_SCRIPT_URL =
+
+  "https://script.google.com/macros/s/AKfycbzydKcj_0V6YlERBurBRkxGBcVioXM4TGWk2owqnTots4mj4ASTDXMZ4qZVL99NHFRs/exec";
+
+
+let lector = null;
+
+let procesando = false;
+
+
+
+/* ==============================
+
+INICIAR CÁMARA
+
+============================== */
+
+
+async function iniciarCamara() {
+
+
+  procesando =
+    false;
+
+
+  document.getElementById(
+    "mensaje"
+  ).innerHTML =
+
+    "Solicitando acceso a la cámara...";
+
+
+  document.getElementById(
+    "boton"
+  ).style.display =
+
+    "none";
+
+
+  try {
+
+
+    lector =
+
+      new Html5Qrcode(
+        "reader"
+      );
+
+
+    const cameras =
+
+      await Html5Qrcode
+        .getCameras();
+
+
+    if (
+      !cameras ||
+      cameras.length === 0
+    ) {
+
+
+      throw new Error(
+
+        "No se encontró ninguna cámara."
+
+      );
+
+    }
+
+
+    let cameraId =
+      cameras[0].id;
+
+
+    /*
+    Buscar cámara trasera
+    */
+
+
+    for (
+
+      let i = 0;
+
+      i < cameras.length;
+
+      i++
+
+    ) {
+
+
+      const nombre =
+
+        String(
+          cameras[i].label || ""
+        ).toLowerCase();
+
+
+      if (
+
+        nombre.includes("back") ||
+
+        nombre.includes("rear") ||
+
+        nombre.includes("environment") ||
+
+        nombre.includes("trasera")
+
+      ) {
+
+
+        cameraId =
+          cameras[i].id;
+
+
+        break;
+
+      }
+
+    }
+
+
+    await lector.start(
+
+
+      cameraId,
+
+
+      {
+
+        fps: 10,
+
+        qrbox: {
+
+          width: 260,
+
+          height: 260
+
+        }
+
+      },
+
+
+      function(
+        decodedText
+      ) {
+
+
+        if (
+          procesando
+        ) {
+
+          return;
+
+        }
+
+
+        procesando =
+          true;
+
+
+        procesarQR(
+          decodedText
+        );
+
+      },
+
+
+      function() {
+
+        /*
+        Ignorar errores
+        mientras busca QR
+        */
+
+      }
+
+
+    );
+
+
+    document.getElementById(
+      "mensaje"
+    ).innerHTML =
+
+      "📷 Cámara activa";
+
+
+  }
+
+
+  catch(error) {
+
+
+    document.getElementById(
+      "mensaje"
+    ).innerHTML =
+
+      "❌ " +
+      error.message;
+
+
+    document.getElementById(
+      "boton"
+    ).style.display =
+
+      "block";
+
+  }
+
+}
+
+
+
+/* ==============================
+
+PROCESAR QR
+
+============================== */
+
+
+async function procesarQR(
+  texto
+) {
+
+
+  let codigo =
+    "";
+
+
+  try {
+
+
+    /*
+    El QR actual contiene:
+
+    .../exec?codigo=BODA-0001
+    */
+
+
+    const url =
+
+      new URL(
+        texto
+      );
+
+
+    codigo =
+
+      url
+        .searchParams
+        .get("codigo");
+
+
+  }
+
+
+  catch(error) {
+
+
+    /*
+    Por si algún QR contiene
+    solamente BODA-0001
+    */
+
+
+    codigo =
+
+      String(
+        texto || ""
+      ).trim();
+
+  }
+
+
+
+  if (
+    !codigo
+  ) {
+
+
+    procesando =
+      false;
+
+
+    document.getElementById(
+      "mensaje"
+    ).innerHTML =
+
+      "❌ QR no válido";
+
+
+    return;
+
+  }
+
+
+
+  codigo =
+
+    String(codigo)
+      .trim();
+
+
+  /*
+  VALIDAR FORMATO
+  */
+
+
+  if (
+
+    !codigo
+      .toUpperCase()
+      .startsWith(
+        "BODA-"
+      )
+
+  ) {
+
+
+    procesando =
+      false;
+
+
+    document.getElementById(
+      "mensaje"
+    ).innerHTML =
+
+      "❌ Este QR no pertenece a la boda";
+
+
+    return;
+
+  }
+
+
+
+  /*
+  DETENER CÁMARA
+  */
+
+
+  try {
+
+
+    if (
+      lector &&
+      lector.isScanning
+    ) {
+
+
+      await lector.stop();
+
+    }
+
+
+  }
+
+
+  catch(error) {
+
+    console.log(error);
+
+  }
+
+
+
+  /*
+  VIBRAR
+  */
+
+
+  if (
+    navigator.vibrate
+  ) {
+
+
+    navigator.vibrate(
+      150
+    );
+
+  }
+
+
+
+  document.getElementById(
+    "mensaje"
+  ).innerHTML = `
+
+    ✅ QR detectado
+
+    <div class="codigo">
+
+      ${codigo}
+
+    </div>
+
+    <p>
+
+      Verificando invitación...
+
+    </p>
+
+  `;
+
+
+
+  /*
+  ENVIAR A APPS SCRIPT
+  */
+
+
+  const destino =
+
+    APPS_SCRIPT_URL +
+
+    "?modo=acceso&codigo=" +
+
+    encodeURIComponent(
+      codigo
+    );
+
+
+
+  window.location.href =
+
+    destino;
+
+}
+
+
+</script>
+
+
+</body>
+
+</html>
