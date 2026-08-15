@@ -486,9 +486,10 @@ async function procesarQR(
       .trim();
 
 
- codigo =
+codigo =
   String(codigo || "")
     .trim()
+    .replace(/^=+/, "")
     .toUpperCase();
 
 
