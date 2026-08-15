@@ -185,7 +185,7 @@ https://script.google.com/macros/s/ABC123/exec
 
 const APPS_SCRIPT_URL =
 
-  "https://script.google.com/macros/s/AKfycbzMuVcQhS7gE97449cogEd_QtDDXzc1nmvo0fCpoQM8Nvp77rnjnO7t9zob652aXpbd/exec";
+  "https://script.google.com/macros/s/AKfycbznNEHYw7ZVDE7NL1HZsX2mBidv4Nuv2yNLRkOF-DKug4IqPApWDVQPa7OTBLkkE9A3/exec";
 
 
 let lector = null;
@@ -486,37 +486,10 @@ async function procesarQR(
       .trim();
 
 
-  /*
-  VALIDAR FORMATO
-  */
-
-
-  if (
-
-    !codigo
-      .toUpperCase()
-      .startsWith(
-        "BODA-"
-      )
-
-  ) {
-
-
-    procesando =
-      false;
-
-
-    document.getElementById(
-      "mensaje"
-    ).innerHTML =
-
-      "❌ Este QR no pertenece a la boda";
-
-
-    return;
-
-  }
-
+ codigo =
+  String(codigo || "")
+    .trim()
+    .toUpperCase();
 
 
   /*
